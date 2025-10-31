@@ -1,5 +1,5 @@
 # Imagen base
-FROM nginx:alpine
+FROM public.ecr.aws/docker/library/nginx:alpine
 
 # Copiamos nuestro HTML al directorio público de nginx2
 COPY index.html /usr/share/nginx/html/index.html
