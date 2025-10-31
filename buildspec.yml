@@ -1,30 +1,19 @@
 version: 0.2
-
-env:
-  variables:
-    ECR_REPO_NAME: "my-ecs-app"
-
 phases:
   pre_build:
     commands:
-      - set -e
-      - echo "Resolviendo cuenta y región..."
-      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-      - AWS_REGION=${AWS_REGION:-$AWS_DEFAULT_REGION}
-      - echo "Cuenta: $ACCOUNT_ID  Region: $AWS_REGION"
-      - echo "Haciendo login en ECR..."
+      - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-      - COMMIT_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest}
-      - IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$COMMIT_TAG
+      - IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
   build:
     commands:
-      - echo "Construyendo imagen $IMAGE_URI"
+      - echo Building the Docker image...
       - docker build -t $IMAGE_URI .
   post_build:
     commands:
-      - echo "Publicando imagen"
       - docker push $IMAGE_URI
       - printf '[{"name":"app","imageUri":"%s"}]' $IMAGE_URI > imagedefinitions.json
 artifacts:
   files:
     - imagedefinitions.json
+
